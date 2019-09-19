@@ -26,8 +26,8 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
   @NotNull private final List<String> myEffectiveFontFamilies = new ArrayList<>();
   @NotNull private final List<String> myRealFontFamilies = new ArrayList<>();
 
-  private Map<String, Integer> myFeatures;
-  private Map<String, Float> myVariations;
+  private Map<String, Integer> myFeatures = Collections.emptyMap();
+  private Map<String, Float> myVariations = Collections.emptyMap();
   private boolean myUseLigatures;
   private float myLineSpacing = DEFAULT_LINE_SPACING;
 
@@ -255,11 +255,13 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
   }
 
   @Override
+  @NotNull
   public Map<String, Integer> features() {
     return myFeatures;
   }
   
   @Override
+  @NotNull
   public Map<String, Float> variations() {
     return myVariations;
   }
