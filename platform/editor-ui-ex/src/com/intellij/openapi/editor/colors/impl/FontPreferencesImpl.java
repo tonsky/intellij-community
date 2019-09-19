@@ -58,6 +58,8 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
     myEffectiveFontFamilies.clear();
     myRealFontFamilies.clear();
     myUseLigatures = false;
+    myFeatures = Collections.emptyMap();
+    myVariations = Collections.emptyMap();
     if (myChangeListener != null) {
       myChangeListener.run();
     }
@@ -172,6 +174,8 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
           modifiablePreferences.setFontSize(fontFamily, myFontSizes.get(fontFamily));
         }
       }
+      modifiablePreferences.setFeatures(myFeatures);
+      modifiablePreferences.setVariations(myVariations);
       modifiablePreferences.setUseLigatures(myUseLigatures);
       modifiablePreferences.setLineSpacing(myLineSpacing);
     }
@@ -222,7 +226,8 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
         return false;
       }
     }
-
+    if (myVariations != that.myVariations) return false;
+    if (myFeatures != that.features()) return false;
     if (myUseLigatures != that.myUseLigatures) return false;
     if (myLineSpacing != that.myLineSpacing) return false;
 
@@ -246,12 +251,22 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
 
   @Override
   public void setFeatures(Map<String, Integer> fontFeatures) {
-    myFeatures = fontFeatures;
+    if (fontFeatures != myFeatures) {
+      myFeatures = fontFeatures;
+      if (myChangeListener != null) {
+        myChangeListener.run();
+      }
+    }
   }
 
   @Override
   public void setVariations(Map<String, Float> fontVariations) {
-    myVariations = fontVariations;
+    if (myVariations != fontVariations) {
+      myVariations = fontVariations;
+      if (myChangeListener != null) {
+        myChangeListener.run();
+      }
+    }
   }
 
   @Override

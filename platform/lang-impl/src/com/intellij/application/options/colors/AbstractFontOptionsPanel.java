@@ -35,6 +35,7 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
 
   @NotNull private final JTextField myEditorFontSizeField = new JTextField(4);
   @NotNull private final JTextField myLineSpacingField = new JTextField(4);
+  @NotNull private final JBTextField fontFeatures = new JBTextField();
   private final FontComboBox myPrimaryCombo = new FontComboBox();
   private final JCheckBox myEnableLigaturesCheckbox = new JCheckBox(ApplicationBundle.message("use.ligatures"));
   private final FontComboBox mySecondaryCombo = new FontComboBox(false, false, true);
@@ -62,23 +63,22 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
 
   protected final JPanel createFontFeaturesPanel() {
     if (areLigaturesAllowed()) {
-      JPanel fontFeatures = new JPanel(new HorizontalLayout(10, SwingConstants.CENTER));
+      JPanel fontFeaturesPanel = new JPanel(new HorizontalLayout(10, SwingConstants.CENTER));
       JLabel label = new JLabel("Font features:");
-      JBTextField input = new JBTextField();
-      input.getDocument().addDocumentListener(new DocumentAdapter() {
+      fontFeatures.getDocument().addDocumentListener(new DocumentAdapter() {
         @Override
         protected void textChanged(@NotNull DocumentEvent e) {
           FontPreferences preferences = getFontPreferences();
           if (preferences instanceof ModifiableFontPreferences) {
-            ((ModifiableFontPreferences)preferences).setFeatures(readFontFeatures(input.getText()));
+            ((ModifiableFontPreferences)preferences).setFeatures(readFontFeatures(fontFeatures.getText()));
             updateDescription(true);
           }
         }
       });
-      input.getEmptyText().setText("liga, ...");
-      fontFeatures.add(label);
-      fontFeatures.add(input);
-      return fontFeatures;
+      fontFeatures.getEmptyText().setText("liga, ...");
+      fontFeaturesPanel.add(label);
+      fontFeaturesPanel.add(fontFeatures);
+      return fontFeaturesPanel;
     } else {
       JPanel panel = new JPanel();
       panel.add(myEnableLigaturesCheckbox);
@@ -309,6 +309,7 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
       ModifiableFontPreferences modifiableFontPreferences = (ModifiableFontPreferences)fontPreferences;
       modifiableFontPreferences.clearFonts();
       modifiableFontPreferences.setUseLigatures(myEnableLigaturesCheckbox.isSelected());
+      modifiableFontPreferences.setFeatures(readFontFeatures(fontFeatures.getText()));
       String primaryFontFamily = myPrimaryCombo.getFontName();
       String secondaryFontFamily = mySecondaryCombo.isNoFontSelected() ? null : mySecondaryCombo.getFontName();
       int fontSize = getFontSizeFromField();
@@ -355,6 +356,7 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
 
     myEnableLigaturesCheckbox.setEnabled(!readOnly && areLigaturesAllowed());
     myEnableLigaturesCheckbox.setSelected(fontPreferences.useLigatures());
+    fontFeatures.setText(writeFontFeatures(fontPreferences.features()));
 
     myIsInSchemeChange = false;
   }
@@ -429,6 +431,21 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
       }
     }
     return hm;
+  }
+
+  private static String writeFontFeatures(Map<String, Integer> m) {
+    if (m.isEmpty()) return "";
+
+    StringBuilder sb = new StringBuilder();
+    int i = 0;
+    for (String s : m.keySet()) {
+      i++;
+      sb.append(s);
+      if (i != m.size()) {
+        sb.append(", ");
+      }
+    }
+    return sb.toString();
   }
 
 }
