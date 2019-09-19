@@ -79,7 +79,7 @@ public class FontInfo {
   
   private static Font deriveVariation(Font font, String variation, float value) {
     try {
-      return (Font) fontMethodDeriveVariation.invoke(font, featureMethodFromString.invoke(null, variation, value));
+      return (Font) fontMethodDeriveVariation.invoke(font, variationMethodFromString.invoke(null, variation, value));
     } catch (IllegalAccessException | InvocationTargetException e) {
       throw new RuntimeException(e);
     }
@@ -102,7 +102,7 @@ public class FontInfo {
         font = deriveVariation(font, entry.getKey(), entry.getValue());
       }
       myFont = font;
-    } else if (features.containsKey("liga")) {
+    } else if (features.get("liga") == 1) {
         myFont = font.deriveFont(Collections.singletonMap(TextAttribute.LIGATURES, TextAttribute.LIGATURES_ON));
     } else {
         myFont = font;

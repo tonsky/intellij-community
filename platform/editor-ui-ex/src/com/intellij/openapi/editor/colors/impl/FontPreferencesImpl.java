@@ -251,7 +251,7 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
 
   @Override
   public void setFeatures(Map<String, Integer> fontFeatures) {
-    if (fontFeatures != myFeatures) {
+    if (!Objects.equals(myFeatures, fontFeatures)) {
       myFeatures = fontFeatures;
       if (myChangeListener != null) {
         myChangeListener.run();
@@ -261,7 +261,7 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
 
   @Override
   public void setVariations(Map<String, Float> fontVariations) {
-    if (myVariations != fontVariations) {
+    if (!Objects.equals(myVariations, fontVariations)) {
       myVariations = fontVariations;
       if (myChangeListener != null) {
         myChangeListener.run();

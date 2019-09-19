@@ -424,9 +424,11 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
 
   private static Map<String, Integer> readFontFeatures(String s) {
     HashMap<String, Integer> hm = new HashMap<>();
-    for (String substr : s.split(",")) {
+    for (String substr: s.split(",")) {
       String trimmed = substr.trim();
-      if (trimmed.length() == 4) {
+      if (trimmed.length() == 5 && trimmed.charAt(0) == '-') {
+        hm.put(trimmed.substring(1), 0);
+      } else if (trimmed.length() == 4) {
         hm.put(trimmed, 1);
       }
     }
@@ -438,9 +440,11 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
 
     StringBuilder sb = new StringBuilder();
     int i = 0;
-    for (String s : m.keySet()) {
+    for (Map.Entry<String, Integer> entry: m.entrySet()) {
       i++;
-      sb.append(s);
+      if (entry.getValue() == 0)
+        sb.append("-");
+      sb.append(entry.getKey());
       if (i != m.size()) {
         sb.append(", ");
       }
