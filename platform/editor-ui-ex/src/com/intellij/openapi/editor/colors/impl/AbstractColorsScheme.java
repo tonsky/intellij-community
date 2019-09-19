@@ -190,10 +190,14 @@ public abstract class AbstractColorsScheme extends EditorFontCacheImpl implement
   public void setEditorFontName(String fontName) {
     ModifiableFontPreferences currPreferences = ensureEditableFontPreferences();
     boolean useLigatures = currPreferences.useLigatures();
+    Map<String, Integer> features = currPreferences.features();
+    Map<String, Float> variations = currPreferences.variations();
     int editorFontSize = getEditorFontSize();
     currPreferences.clear();
     currPreferences.register(fontName, editorFontSize);
     currPreferences.setUseLigatures(useLigatures);
+    currPreferences.setFeatures(features);
+    currPreferences.setVariations(variations);
     initFonts();
   }
 

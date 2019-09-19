@@ -4242,6 +4242,10 @@ public final class EditorImpl extends UserDataHolderBase implements EditorEx, Hi
         }
       }
       preferences.setUseLigatures(delegatePreferences != null && delegatePreferences.useLigatures());
+      if (delegatePreferences != null) {
+        preferences.setFeatures(delegatePreferences.features());
+        preferences.setVariations(delegatePreferences.variations());
+      }
     }
 
     private void reinitFontsAndSettings() {

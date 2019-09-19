@@ -79,6 +79,7 @@ public class AppEditorFontOptions implements PersistentStateComponent<AppEditorF
     fontPreferences.register(state.FONT_FAMILY, fontSize);
     fontPreferences.setLineSpacing(state.LINE_SPACING);
     fontPreferences.setUseLigatures(state.USE_LIGATURES);
+    fontPreferences.setFeatures(state);
     if (state.SECONDARY_FONT_FAMILY != null) {
       fontPreferences.register(state.SECONDARY_FONT_FAMILY, fontSize);
     }
