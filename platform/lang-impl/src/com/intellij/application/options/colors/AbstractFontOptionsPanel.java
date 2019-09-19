@@ -440,7 +440,7 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
 
     StringBuilder sb = new StringBuilder();
     int i = 0;
-    for (Map.Entry<String, Integer> entry: m.entrySet()) {
+    for (Map.Entry<String, Integer> entry: new TreeMap<>(m).entrySet()) {
       i++;
       if (entry.getValue() == 0)
         sb.append("-");
