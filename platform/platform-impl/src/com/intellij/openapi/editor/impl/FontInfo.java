@@ -12,6 +12,8 @@ import sun.font.FontDesignMetrics;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextAttribute;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collections;
 
 /**
@@ -44,6 +46,23 @@ public class FontInfo {
     this(familyName, size, style, useLigatures, null);
   }
 
+  private static Font deriveFeatures(Font font, String... featureNames) {
+    if (font == null)
+      return null;
+    try {
+      Class featureClass = Class.forName("java.awt.font.FontFeature");
+      Method fromString = featureClass.getDeclaredMethod("fromString", String.class);
+      Method derive = Font.class.getDeclaredMethod("deriveFont", featureClass);
+      for (String featureName: featureNames) {
+        font = (Font) derive.invoke(font, fromString.invoke(null, featureName));
+      }
+      return font;
+    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+      //System.out.println("No class java.awt.font.FontFeature" + e);
+      return null;
+    }
+  }
+  
   /**
    * To get valid font metrics from this {@link FontInfo} instance, pass valid {@link FontRenderContext} here as a parameter.
    */
@@ -52,7 +71,15 @@ public class FontInfo {
     mySize = size;
     myStyle = style;
     Font font = new Font(familyName, style, size);
-    myFont = useLigatures ? font.deriveFont(Collections.singletonMap(TextAttribute.LIGATURES, TextAttribute.LIGATURES_ON)) : font;
+    if (useLigatures) {
+      Font derived = deriveFeatures(font, "liga", "onum", "zero");
+      if (derived != null)
+        myFont = derived;
+      else
+        myFont = font.deriveFont(Collections.singletonMap(TextAttribute.LIGATURES, TextAttribute.LIGATURES_ON));
+    } else {
+      myFont = font;
+    }
     myContext = fontRenderContext;
   }
 
