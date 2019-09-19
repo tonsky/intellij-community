@@ -36,6 +36,7 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
   @NotNull private final JTextField myEditorFontSizeField = new JTextField(4);
   @NotNull private final JTextField myLineSpacingField = new JTextField(4);
   @NotNull private final JBTextField fontFeatures = new JBTextField();
+  @NotNull private final JBTextField fontVariations = new JBTextField();
   private final FontComboBox myPrimaryCombo = new FontComboBox();
   private final JCheckBox myEnableLigaturesCheckbox = new JCheckBox(ApplicationBundle.message("use.ligatures"));
   private final FontComboBox mySecondaryCombo = new FontComboBox(false, false, true);
@@ -63,8 +64,10 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
 
   protected final JPanel createFontFeaturesPanel() {
     if (areLigaturesAllowed()) {
+      JPanel advancedFeatures = new JPanel(new VerticalLayout(10, SwingConstants.LEFT));
+
       JPanel fontFeaturesPanel = new JPanel(new HorizontalLayout(10, SwingConstants.CENTER));
-      JLabel label = new JLabel("Font features:");
+      JLabel featuresLabel = new JLabel("Font features:");
       fontFeatures.getDocument().addDocumentListener(new DocumentAdapter() {
         @Override
         protected void textChanged(@NotNull DocumentEvent e) {
@@ -76,9 +79,30 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
         }
       });
       fontFeatures.getEmptyText().setText("liga, ...");
-      fontFeaturesPanel.add(label);
+      fontFeaturesPanel.add(featuresLabel);
       fontFeaturesPanel.add(fontFeatures);
-      return fontFeaturesPanel;
+      advancedFeatures.add(fontFeaturesPanel);
+
+      JPanel fontVariationsPanel = new JPanel(new HorizontalLayout(10, SwingConstants.CENTER));
+      JLabel variationsLabel = new JLabel("Font variations:");
+      fontVariations.getDocument().addDocumentListener(new DocumentAdapter() {
+        @Override
+        protected void textChanged(@NotNull DocumentEvent e) {
+          FontPreferences preferences = getFontPreferences();
+          if (preferences instanceof ModifiableFontPreferences) {
+            ((ModifiableFontPreferences)preferences).setVariations(readFontVariations(fontVariations.getText()));
+            updateDescription(true);
+          }
+        }
+      });
+      fontVariations.getEmptyText().setText("wght=800, ...");
+      fontVariationsPanel.add(variationsLabel);
+      fontVariationsPanel.add(fontVariations);
+      // todo: api for font variants in glyph layout
+      // advancedFeatures.add(fontVariationsPanel);
+
+
+      return advancedFeatures;
     } else {
       JPanel panel = new JPanel();
       panel.add(myEnableLigaturesCheckbox);
@@ -357,6 +381,7 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
     myEnableLigaturesCheckbox.setEnabled(!readOnly && areLigaturesAllowed());
     myEnableLigaturesCheckbox.setSelected(fontPreferences.useLigatures());
     fontFeatures.setText(writeFontFeatures(fontPreferences.features()));
+    fontVariations.setText(writeFontVariations(fontPreferences.variations()));
 
     myIsInSchemeChange = false;
   }
@@ -435,6 +460,26 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
     return hm;
   }
 
+  private static Map<String, Float> readFontVariations(String s) {
+    HashMap<String, Float> hm = new HashMap<>();
+    for (String substr: s.split(",")) {
+      String trimmed = substr.trim();
+      String[] variation = trimmed.split("=");
+      if (variation.length == 2) {
+        String key = variation[0];
+        if (key.length() == 4) {
+          //noinspection CatchMayIgnoreException
+          try {
+            float val = Float.parseFloat(variation[1]);
+            hm.put(key, val);
+          }
+          catch (NumberFormatException e) { }
+        }
+      }
+    }
+    return hm;
+  }
+
   private static String writeFontFeatures(Map<String, Integer> m) {
     if (m.isEmpty()) return "";
 
@@ -451,5 +496,23 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
     }
     return sb.toString();
   }
+
+  private static String writeFontVariations(Map<String, Float> m) {
+    if (m.isEmpty()) return "";
+
+    StringBuilder sb = new StringBuilder();
+    int i = 0;
+    for (Map.Entry<String, Float> entry: m.entrySet()) {
+      i++;
+      sb.append(entry.getKey());
+      sb.append("=");
+      sb.append(entry.getValue());
+      if (i != m.size()) {
+        sb.append(", ");
+      }
+    }
+    return sb.toString();
+  }
+
 
 }
