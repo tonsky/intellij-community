@@ -18,6 +18,7 @@ package com.intellij.openapi.editor.colors;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class DelegatingFontPreferences extends FontPreferences {
@@ -70,5 +71,14 @@ public class DelegatingFontPreferences extends FontPreferences {
     return myDelegateSupplier.get().getLineSpacing();
   }
 
+  @NotNull
+  @Override
+  public Map<String, Integer> features() {
+    return myDelegateSupplier.get().features();
+  }
+
+  @NotNull
+  @Override
+  public Map<String, Float> variations() { return myDelegateSupplier.get().variations(); }
 
 }
