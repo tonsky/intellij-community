@@ -15,6 +15,7 @@ import java.awt.font.TextAttribute;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * @author max
@@ -35,51 +36,78 @@ public class FontInfo {
    */
   @Deprecated
   public FontInfo(final String familyName, final int size, @JdkConstants.FontStyle int style) {
-    this(familyName, size, style, false, null);
+    this(familyName, size, style, Collections.emptyMap(), Collections.emptyMap(), null);
   }
 
   /**
    * @deprecated Use {@link #FontInfo(String, int, int, boolean, FontRenderContext)} instead.
    */
   @Deprecated
-  public FontInfo(final String familyName, final int size, @JdkConstants.FontStyle int style, boolean useLigatures) {
-    this(familyName, size, style, useLigatures, null);
+  public FontInfo(final String familyName, final int size, @JdkConstants.FontStyle int style, Map<String, Integer> features, Map<String, Float> variations) {
+    this(familyName, size, style, features, variations, null);
   }
 
-  private static Font deriveFeatures(Font font, String... featureNames) {
-    if (font == null)
-      return null;
+  private static Class featureClass = null;
+  private static Method featureMethodFromString = null;
+  private static Method fontMethodDeriveFeature = null;
+  
+  private static Class variationClass = null;
+  private static Method variationMethodFromString = null;
+  private static Method fontMethodDeriveVariation = null;
+  
+  static {
     try {
-      Class featureClass = Class.forName("java.awt.font.FontFeature");
-      Method fromString = featureClass.getDeclaredMethod("fromString", String.class);
-      Method derive = Font.class.getDeclaredMethod("deriveFont", featureClass);
-      for (String featureName: featureNames) {
-        font = (Font) derive.invoke(font, fromString.invoke(null, featureName));
-      }
-      return font;
-    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      //System.out.println("No class java.awt.font.FontFeature" + e);
-      return null;
+      featureClass = Class.forName("java.awt.font.FontFeature");
+      featureMethodFromString = featureClass.getDeclaredMethod("fromString", String.class, Integer.TYPE);
+      fontMethodDeriveFeature = Font.class.getDeclaredMethod("deriveFont", featureClass);
+      
+      variationClass = Class.forName("java.awt.font.FontVariation");
+      variationMethodFromString = variationClass.getDeclaredMethod("fromString", String.class, Float.TYPE);
+      fontMethodDeriveVariation = Font.class.getDeclaredMethod("deriveFont", variationClass);
+    } catch (ClassNotFoundException | NoSuchMethodException e) {
+      // not JBR
+    }
+  }
+    
+  private static Font deriveFeature(Font font, String feature, int value) {
+    try {
+      return (Font) fontMethodDeriveFeature.invoke(font, featureMethodFromString.invoke(null, feature, value));
+    } catch (IllegalAccessException | InvocationTargetException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  
+  private static Font deriveVariation(Font font, String variation, float value) {
+    try {
+      return (Font) fontMethodDeriveVariation.invoke(font, featureMethodFromString.invoke(null, variation, value));
+    } catch (IllegalAccessException | InvocationTargetException e) {
+      throw new RuntimeException(e);
     }
   }
   
   /**
    * To get valid font metrics from this {@link FontInfo} instance, pass valid {@link FontRenderContext} here as a parameter.
    */
-  public FontInfo(final String familyName, final int size, @JdkConstants.FontStyle int style, boolean useLigatures,
+  public FontInfo(final String familyName, final int size, @JdkConstants.FontStyle int style, Map<String, Integer> features, Map<String, Float> variations,
                   FontRenderContext fontRenderContext) {
     mySize = size;
     myStyle = style;
     Font font = new Font(familyName, style, size);
-    if (useLigatures) {
-      Font derived = deriveFeatures(font, "liga", "onum", "zero");
-      if (derived != null)
-        myFont = derived;
-      else
+    
+    if (featureClass != null && variationClass != null) {
+      for (Map.Entry<String, Integer> entry: features.entrySet()) {
+        font = deriveFeature(font, entry.getKey(), entry.getValue());
+      }
+      for (Map.Entry<String, Float> entry: variations.entrySet()) {
+        font = deriveVariation(font, entry.getKey(), entry.getValue());
+      }
+      myFont = font;
+    } else if (features.containsKey("liga")) {
         myFont = font.deriveFont(Collections.singletonMap(TextAttribute.LIGATURES, TextAttribute.LIGATURES_ON));
     } else {
-      myFont = font;
+        myFont = font;
     }
+
     myContext = fontRenderContext;
   }
 

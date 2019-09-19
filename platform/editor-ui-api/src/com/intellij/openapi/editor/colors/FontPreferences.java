@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class FontPreferences {
   public final static @NonNls @NotNull String DEFAULT_FONT_NAME = getDefaultFontName();
@@ -46,6 +47,16 @@ public class FontPreferences {
 
   public boolean useLigatures() {
     return false;
+  }
+  
+  @NotNull
+  public Map<String, Integer> features() {
+    return Collections.EMPTY_MAP;
+  }
+  
+  @NotNull
+  public Map<String, Float> variations() {
+    return Collections.EMPTY_MAP;
   }
 
   public boolean hasSize(@NotNull String fontName) {
