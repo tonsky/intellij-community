@@ -193,12 +193,12 @@ public class ComplementaryFontsRegistry {
                                               FontRenderContext context) {
     boolean tryDefaultFont = true;
     List<String> fontFamilies = preferences.getEffectiveFontFamilies();
-    boolean useLigatures = !Patches.TEXT_LAYOUT_IS_SLOW && preferences.useLigatures();
+    //boolean useLigatures = !Patches.TEXT_LAYOUT_IS_SLOW && preferences.useLigatures();
     FontInfo result;
     //noinspection ForLoopReplaceableByForEach
     for (int i = 0, len = fontFamilies.size(); i < len; ++i) { // avoid foreach, it instantiates ArrayList$Itr, this traversal happens very often
       final String fontFamily = fontFamilies.get(i);
-      result = doGetFontAbleToDisplay(codePoint, preferences.getSize(fontFamily), style, fontFamily, useLigatures, context, len > 1);
+      result = doGetFontAbleToDisplay(codePoint, preferences.getSize(fontFamily), style, fontFamily, preferences.features(), preferences.variations(), context, len > 1);
       if (result != null && result.getFont().canDisplayUpTo(remainingText, start, end) == -1) {
         return result;
       }
@@ -209,12 +209,12 @@ public class ComplementaryFontsRegistry {
       size = preferences.getSize(fontFamilies.get(0));
     }
     if (tryDefaultFont) {
-      result = doGetFontAbleToDisplay(codePoint, size, style, FontPreferences.DEFAULT_FONT_NAME, useLigatures, context, false);
+      result = doGetFontAbleToDisplay(codePoint, size, style, FontPreferences.DEFAULT_FONT_NAME, preferences.features(), preferences.variations(), context, false);
       if (result != null && result.getFont().canDisplayUpTo(remainingText, start, end) == -1) {
         return result;
       }
     }
-    result = doGetFontAbleToDisplay(codePoint, remainingText, start, end, size, style, useLigatures, context);
+    result = doGetFontAbleToDisplay(codePoint, remainingText, start, end, size, style, preferences.features(), preferences.variations(), context);
     if (LOG.isDebugEnabled()) {
       LOG.debug("Fallback font: " + result.getFont().getFontName());
     }
@@ -235,7 +235,7 @@ public class ComplementaryFontsRegistry {
     //noinspection ForLoopReplaceableByForEach
     for (int i = 0, len = fontFamilies.size(); i < len; ++i) { // avoid foreach, it instantiates ArrayList$Itr, this traversal happens very often
       final String fontFamily = fontFamilies.get(i);
-      result = doGetFontAbleToDisplay(codePoint, preferences.getSize(fontFamily), style, fontFamily, useLigatures, context, len > 1);
+      result = doGetFontAbleToDisplay(codePoint, preferences.getSize(fontFamily), style, fontFamily, preferences.features(), preferences.variations(), context, len > 1);
       if (result != null) {
         return result;
       }
@@ -246,12 +246,12 @@ public class ComplementaryFontsRegistry {
       size = preferences.getSize(fontFamilies.get(0));
     }
     if (tryDefaultFont) {
-      result = doGetFontAbleToDisplay(codePoint, size, style, FontPreferences.DEFAULT_FONT_NAME, useLigatures, context, false);
+      result = doGetFontAbleToDisplay(codePoint, size, style, FontPreferences.DEFAULT_FONT_NAME, preferences.features(), preferences.variations(), context, false);
       if (result != null) {
         return result;
       }
     }
-    result = doGetFontAbleToDisplay(codePoint, null, 0, 0, size, style, useLigatures, context);
+    result = doGetFontAbleToDisplay(codePoint, null, 0, 0, size, style, preferences.features(), preferences.variations(), context);
     if (LOG.isDebugEnabled()) {
       LOG.debug("Fallback font: " + result.getFont().getFontName());
     }
@@ -275,17 +275,17 @@ public class ComplementaryFontsRegistry {
   @NotNull
   public static FontInfo getFontAbleToDisplay(int codePoint, int size, @JdkConstants.FontStyle int style, @NotNull String defaultFontFamily,
                                               FontRenderContext context) {
-    FontInfo result = doGetFontAbleToDisplay(codePoint, size, style, defaultFontFamily, false, context, false);
+    FontInfo result = doGetFontAbleToDisplay(codePoint, size, style, defaultFontFamily, Collections.emptyMap(), Collections.emptyMap(), context, false);
     if (result != null) {
       return result;
     }
-    return doGetFontAbleToDisplay(codePoint, null, 0, 0, size, style, false, context);
+    return doGetFontAbleToDisplay(codePoint, null, 0, 0, size, style, Collections.emptyMap(), Collections.emptyMap(), context);
   }
 
   @Nullable
   private static FontInfo doGetFontAbleToDisplay(int codePoint, int size, @JdkConstants.FontStyle int originalStyle, 
-                                                 @NotNull String defaultFontFamily, boolean useLigatures, FontRenderContext context,
-                                                 boolean disableFontFallback) {
+                                                 @NotNull String defaultFontFamily, Map<String, Integer> features, Map<String, Float> variations,
+                                                 FontRenderContext context, boolean disableFontFallback) {
     if (originalStyle < 0 || originalStyle > 3) originalStyle = Font.PLAIN;
     synchronized (lock) {
       @JdkConstants.FontStyle int style = originalStyle;
@@ -313,13 +313,13 @@ public class ComplementaryFontsRegistry {
         ourLastFontStyle = style;
         ourLastFallBackInfo = fallBackInfo;
       }
-      return fallBackInfo.canDisplay(codePoint, disableFontFallback) ? fallBackInfo.getFontInfo(size, useLigatures, context) : null;
+      return fallBackInfo.canDisplay(codePoint, disableFontFallback) ? fallBackInfo.getFontInfo(size, features, variations, context) : null;
     }
   }
 
   @NotNull
   private static FontInfo doGetFontAbleToDisplay(int codePoint, char[] remainingText, int start, int end, 
-                                                 int size, @JdkConstants.FontStyle int style, boolean useLigatures,
+                                                 int size, @JdkConstants.FontStyle int style, Map<String, Integer> features, Map<String, Float> variations,
                                                  FontRenderContext context) {
     if (style < 0 || style > 3) style = Font.PLAIN;
     synchronized (lock) {
@@ -358,18 +358,20 @@ public class ComplementaryFontsRegistry {
           }
         }
       }
-      return fallBackInfo.getFontInfo(size, useLigatures, context);
+      return fallBackInfo.getFontInfo(size, features, variations, context);
     }
   }
 
   private static class FontKey implements Cloneable {
     private int mySize;
-    private boolean myUseLigatures;
+    private Map<String, Integer> myFeatures;
+    private Map<String, Float> myVariations;
     private FontRenderContext myContext;
 
-    private FontKey(int size, boolean useLigatures, FontRenderContext context) {
+    private FontKey(int size, Map<String, Integer> features, Map<String, Float> variations, FontRenderContext context) {
       mySize = size;
-      myUseLigatures = useLigatures;
+      myFeatures = features;
+      myVariations = variations;
       myContext = context;
     }
 
@@ -381,7 +383,8 @@ public class ComplementaryFontsRegistry {
       FontKey key = (FontKey)o;
 
       if (mySize != key.mySize) return false;
-      if (myUseLigatures != key.myUseLigatures) return false;
+      if (!Objects.equals(myFeatures, key.myFeatures)) return false;
+      if (!Objects.equals(myVariations, key.myVariations)) return false;
       if (!Objects.equals(myContext, key.myContext)) return false;
 
       return true;
@@ -390,7 +393,8 @@ public class ComplementaryFontsRegistry {
     @Override
     public int hashCode() {
       int result = mySize;
-      result = 31 * result + (myUseLigatures ? 1 : 0);
+      result = 31 * result + (myFeatures != null ? myFeatures.hashCode() : 0);
+      result = 31 * result + (myVariations != null ? myVariations.hashCode() : 0);
       result = 31 * result + (myContext != null ? myContext.hashCode() : 0);
       return result;
     }
@@ -410,7 +414,7 @@ public class ComplementaryFontsRegistry {
     private final Font myBaseFont;
     private final int myOriginalStyle;
     private final Map<FontKey, FontInfo> myFontInfoMap = new HashMap<>();
-    private final FontKey myLastFontKey = new FontKey(-1, false, new FontRenderContext(null, false, false));
+    private final FontKey myLastFontKey = new FontKey(-1, Collections.emptyMap(), Collections.emptyMap(), new FontRenderContext(null, false, false));
     private FontInfo myLastFontInfo;
 
     private FallBackInfo(String familyName, @JdkConstants.FontStyle int style, int originalStyle) {
@@ -422,18 +426,20 @@ public class ComplementaryFontsRegistry {
       return codePoint < 128 || FontInfo.canDisplay(myBaseFont, codePoint, disableFontFallback);
     }
 
-    private FontInfo getFontInfo(int size, boolean useLigatures, FontRenderContext fontRenderContext) {
+    private FontInfo getFontInfo(int size, Map<String, Integer> features, Map<String, Float> variations, FontRenderContext fontRenderContext) {
       if (myLastFontKey.mySize == size &&
-          myLastFontKey.myUseLigatures == useLigatures &&
+          Objects.equals(myLastFontKey.myFeatures, features) &&
+          Objects.equals(myLastFontKey.myVariations, variations) &&
           Objects.equals(myLastFontKey.myContext, fontRenderContext)) {
         return myLastFontInfo;
       }
       myLastFontKey.mySize = size;
-      myLastFontKey.myUseLigatures = useLigatures;
+      myLastFontKey.myFeatures = features;
+      myLastFontKey.myVariations = variations;
       myLastFontKey.myContext = fontRenderContext;
       FontInfo fontInfo = myFontInfoMap.get(myLastFontKey);
       if (fontInfo == null) {
-        fontInfo = new FontInfo(myBaseFont.getName(), size, myBaseFont.getStyle(), useLigatures, fontRenderContext);
+        fontInfo = new FontInfo(myBaseFont.getName(), size, myBaseFont.getStyle(), features, variations, fontRenderContext);
         myFontInfoMap.put(myLastFontKey.clone(), fontInfo);
       }
       myLastFontInfo = fontInfo;

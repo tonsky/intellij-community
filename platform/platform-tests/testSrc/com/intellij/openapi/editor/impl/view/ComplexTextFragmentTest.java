@@ -26,6 +26,7 @@ import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
 import java.awt.geom.Point2D;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -101,7 +102,7 @@ public class ComplexTextFragmentTest {
     try {
       int length = gv.getNumChars();
       char[] text = new char[length];
-      FontInfo fontInfo = new FontInfo(Font.MONOSPACED, 1, Font.PLAIN, false, new FontRenderContext(null, false, false));
+      FontInfo fontInfo = new FontInfo(Font.MONOSPACED, 1, Font.PLAIN, Collections.emptyMap(), Collections.emptyMap(), new FontRenderContext(null, false, false));
       ComplexTextFragment fragment = new ComplexTextFragment(text, 0, length, (gv.getLayoutFlags() & GlyphVector.FLAG_RUN_RTL) != 0, 
                                                              fontInfo);
       int[] charPositions = new int[length];

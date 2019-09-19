@@ -9,8 +9,7 @@ import gnu.trove.TObjectIntHashMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Utility class which holds collection of font families and theirs sizes.
@@ -243,6 +242,25 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
       }
     }
   }
+  
+  @Override
+  public Map<String, Integer> features() {
+    if (useLigatures()) {
+      //return Collections.singletonMap("liga", 1);
+      HashMap<String, Integer> res = new HashMap<>();
+      res.put("liga", 1);
+      res.put("onum", 1);
+      res.put("zero", 1);
+      return res;
+    } else 
+      return Collections.EMPTY_MAP;
+  }
+  
+  @Override
+  public Map<String, Float> variations() {
+    return Collections.EMPTY_MAP;
+  }
+
 
   @Override
   public void setFontFeatures(String[] fontFeatures) {
