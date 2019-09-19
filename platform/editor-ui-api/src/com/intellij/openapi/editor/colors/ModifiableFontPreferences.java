@@ -18,12 +18,14 @@ package com.intellij.openapi.editor.colors;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Map;
 
 public abstract class ModifiableFontPreferences extends FontPreferences {
   public abstract void clear();
   public abstract void clearFonts();
   public abstract void setUseLigatures(boolean useLigatures);
-  public abstract void setFontFeatures(String[] fontFeatures);
+  public abstract void setFeatures(Map<String, Integer> fontFeatures);
+  public abstract void setVariations(Map<String, Float> fontVariations);
   public abstract void addFontFamily(String family);
   public abstract void register(String family, int size);
   public abstract void setEffectiveFontFamilies(List<String> fontFamilies);

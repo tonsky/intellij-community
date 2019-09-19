@@ -60,10 +60,6 @@ public class FontPreferences {
     return Collections.EMPTY_MAP;
   }
 
-  public String[] fontFeatures() {
-    return ArrayUtil.EMPTY_STRING_ARRAY;
-  }
-
   public boolean hasSize(@NotNull String fontName) {
     return false;
   }

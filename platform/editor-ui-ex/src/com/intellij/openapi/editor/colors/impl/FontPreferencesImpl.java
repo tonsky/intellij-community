@@ -26,7 +26,8 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
   @NotNull private final List<String> myEffectiveFontFamilies = new ArrayList<>();
   @NotNull private final List<String> myRealFontFamilies = new ArrayList<>();
 
-  private String[] myFontFeatures;
+  private Map<String, Integer> myFeatures;
+  private Map<String, Float> myVariations;
   private boolean myUseLigatures;
   private float myLineSpacing = DEFAULT_LINE_SPACING;
 
@@ -242,34 +243,25 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
       }
     }
   }
-  
+
+  @Override
+  public void setFeatures(Map<String, Integer> fontFeatures) {
+    myFeatures = fontFeatures;
+  }
+
+  @Override
+  public void setVariations(Map<String, Float> fontVariations) {
+    myVariations = fontVariations;
+  }
+
   @Override
   public Map<String, Integer> features() {
-    if (useLigatures()) {
-      //return Collections.singletonMap("liga", 1);
-      HashMap<String, Integer> res = new HashMap<>();
-      res.put("liga", 1);
-      res.put("onum", 1);
-      res.put("zero", 1);
-      return res;
-    } else 
-      return Collections.EMPTY_MAP;
+    return myFeatures;
   }
   
   @Override
   public Map<String, Float> variations() {
-    return Collections.EMPTY_MAP;
-  }
-
-
-  @Override
-  public void setFontFeatures(String[] fontFeatures) {
-    myFontFeatures = fontFeatures;
-  }
-
-  @Override
-  public String[] fontFeatures() {
-    return myFontFeatures;
+    return myVariations;
   }
 
   @Override

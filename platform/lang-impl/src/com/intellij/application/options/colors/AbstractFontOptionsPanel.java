@@ -70,7 +70,7 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
         protected void textChanged(@NotNull DocumentEvent e) {
           FontPreferences preferences = getFontPreferences();
           if (preferences instanceof ModifiableFontPreferences) {
-            ((ModifiableFontPreferences)preferences).setFontFeatures(readFontFeatures(input.getText()));
+            ((ModifiableFontPreferences)preferences).setFeatures(readFontFeatures(input.getText()));
             updateDescription(true);
           }
         }
@@ -420,16 +420,15 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
     return new HashSet<>();
   }
 
-  private static String[] readFontFeatures(String s) {
-    ArrayList<String> al = new ArrayList<>();
+  private static Map<String, Integer> readFontFeatures(String s) {
+    HashMap<String, Integer> hm = new HashMap<>();
     for (String substr : s.split(",")) {
       String trimmed = substr.trim();
       if (trimmed.length() == 4) {
-        al.add(trimmed);
+        hm.put(trimmed, 1);
       }
     }
-    String[] arr = new String[al.size()];
-    return al.toArray(arr);
+    return hm;
   }
 
 }
