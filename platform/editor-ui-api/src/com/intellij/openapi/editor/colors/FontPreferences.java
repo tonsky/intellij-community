@@ -4,6 +4,7 @@ package com.intellij.openapi.editor.colors;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.options.FontSize;
 import com.intellij.openapi.util.SystemInfo;
+import com.intellij.util.ArrayUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -46,6 +47,10 @@ public class FontPreferences {
 
   public boolean useLigatures() {
     return false;
+  }
+
+  public String[] fontFeatures() {
+    return ArrayUtil.EMPTY_STRING_ARRAY;
   }
 
   public boolean hasSize(@NotNull String fontName) {

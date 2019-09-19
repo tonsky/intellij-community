@@ -27,10 +27,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 
 public abstract class AbstractFontOptionsPanel extends JPanel implements OptionsPanel {
   private final EventDispatcher<ColorAndFontSettingsListener> myDispatcher = EventDispatcher.create(ColorAndFontSettingsListener.class);
@@ -67,16 +65,19 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
       JPanel fontFeatures = new JPanel(new HorizontalLayout(10, SwingConstants.CENTER));
       JLabel label = new JLabel("Font features:");
       JBTextField input = new JBTextField();
-      input.addActionListener(e -> {
-        FontPreferences preferences = getFontPreferences();
-        if (preferences instanceof ModifiableFontPreferences) {
-          updateDescription(true);
+      input.getDocument().addDocumentListener(new DocumentAdapter() {
+        @Override
+        protected void textChanged(@NotNull DocumentEvent e) {
+          FontPreferences preferences = getFontPreferences();
+          if (preferences instanceof ModifiableFontPreferences) {
+            ((ModifiableFontPreferences)preferences).setFontFeatures(readFontFeatures(input.getText()));
+            updateDescription(true);
+          }
         }
       });
-      input.setText("liga, ...");
+      input.getEmptyText().setText("liga, ...");
       fontFeatures.add(label);
       fontFeatures.add(input);
-
       return fontFeatures;
     } else {
       JPanel panel = new JPanel();
@@ -162,7 +163,6 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
 
     JPanel advancedTypography = createFontFeaturesPanel();
     panel.add(advancedTypography);
-    advancedTypography.setEnabled(false);
 
     c.gridx = 0;
     c.gridy = 4;
@@ -418,6 +418,18 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
   @Override
   public Set<String> processListOptions() {
     return new HashSet<>();
+  }
+
+  private static String[] readFontFeatures(String s) {
+    ArrayList<String> al = new ArrayList<>();
+    for (String substr : s.split(",")) {
+      String trimmed = substr.trim();
+      if (trimmed.length() == 4) {
+        al.add(trimmed);
+      }
+    }
+    String[] arr = new String[al.size()];
+    return al.toArray(arr);
   }
 
 }

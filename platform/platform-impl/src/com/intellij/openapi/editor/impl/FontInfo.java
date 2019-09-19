@@ -15,6 +15,7 @@ import java.awt.font.TextAttribute;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * @author max
@@ -62,7 +63,25 @@ public class FontInfo {
       return null;
     }
   }
-  
+
+  public FontInfo(final String familyName, final int size, @JdkConstants.FontStyle int style,
+                  String[] fontFeatures, FontRenderContext fontRenderContext) {
+    mySize = size;
+    myStyle = style;
+    Font font = new Font(familyName, style, size);
+    if (fontFeatures.length > 0) {
+      Font derived = deriveFeatures(font, fontFeatures);
+      if (derived != null) {
+        myFont = derived;
+      } else {
+        myFont = font;
+      }
+    } else {
+      myFont = font;
+    }
+    myContext = fontRenderContext;
+  }
+
   /**
    * To get valid font metrics from this {@link FontInfo} instance, pass valid {@link FontRenderContext} here as a parameter.
    */

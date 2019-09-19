@@ -27,6 +27,7 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
   @NotNull private final List<String> myEffectiveFontFamilies = new ArrayList<>();
   @NotNull private final List<String> myRealFontFamilies = new ArrayList<>();
 
+  private String[] myFontFeatures;
   private boolean myUseLigatures;
   private float myLineSpacing = DEFAULT_LINE_SPACING;
 
@@ -241,6 +242,16 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
         myChangeListener.run();
       }
     }
+  }
+
+  @Override
+  public void setFontFeatures(String[] fontFeatures) {
+    myFontFeatures = fontFeatures;
+  }
+
+  @Override
+  public String[] fontFeatures() {
+    return myFontFeatures;
   }
 
   @Override
