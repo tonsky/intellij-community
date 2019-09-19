@@ -10,11 +10,11 @@ import com.intellij.openapi.application.ApplicationNamesInfo;
 import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.colors.FontPreferences;
 import com.intellij.openapi.editor.colors.ModifiableFontPreferences;
-import com.intellij.ui.DocumentAdapter;
-import com.intellij.ui.FontComboBox;
-import com.intellij.ui.FontInfoRenderer;
-import com.intellij.ui.TooltipWithClickableLinks;
+import com.intellij.ui.*;
 import com.intellij.ui.components.JBCheckBox;
+import com.intellij.ui.components.JBTextField;
+import com.intellij.ui.components.panels.HorizontalLayout;
+import com.intellij.ui.components.panels.VerticalLayout;
 import com.intellij.util.EventDispatcher;
 import com.intellij.util.ui.JBUI;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +33,6 @@ import java.util.Locale;
 import java.util.Set;
 
 public abstract class AbstractFontOptionsPanel extends JPanel implements OptionsPanel {
-
   private final EventDispatcher<ColorAndFontSettingsListener> myDispatcher = EventDispatcher.create(ColorAndFontSettingsListener.class);
 
   @NotNull private final JTextField myEditorFontSizeField = new JTextField(4);
@@ -61,6 +60,48 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
 
   protected JComponent createControls() {
     return createFontSettingsPanel();
+  }
+
+  protected final JPanel createFontFeaturesPanel() {
+    if (areLigaturesAllowed()) {
+      JPanel fontFeatures = new JPanel(new HorizontalLayout(10, SwingConstants.CENTER));
+      JLabel label = new JLabel("Font features:");
+      JBTextField input = new JBTextField();
+      input.addActionListener(e -> {
+        FontPreferences preferences = getFontPreferences();
+        if (preferences instanceof ModifiableFontPreferences) {
+          updateDescription(true);
+        }
+      });
+      input.setText("liga, ...");
+      fontFeatures.add(label);
+      fontFeatures.add(input);
+
+      return fontFeatures;
+    } else {
+      JPanel panel = new JPanel();
+      panel.add(myEnableLigaturesCheckbox);
+      myEnableLigaturesCheckbox.setBorder(null);
+
+      JLabel warningIcon = new JLabel(AllIcons.General.BalloonWarning);
+      IdeTooltipManager.getInstance().setCustomTooltip(
+        warningIcon,
+        new TooltipWithClickableLinks.ForBrowser(warningIcon,
+                                                 ApplicationBundle.message("ligatures.jre.warning",
+                                                                           ApplicationNamesInfo.getInstance().getFullProductName())));
+      warningIcon.setBorder(JBUI.Borders.emptyLeft(5));
+      warningIcon.setVisible(!areLigaturesAllowed());
+      panel.add(warningIcon);
+
+      myEnableLigaturesCheckbox.addActionListener(e -> {
+        FontPreferences preferences = getFontPreferences();
+        if (preferences instanceof ModifiableFontPreferences) {
+          ((ModifiableFontPreferences)preferences).setUseLigatures(myEnableLigaturesCheckbox.isSelected());
+          updateDescription(true);
+        }
+      });
+      return panel;
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -116,17 +157,13 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
     fontPanel.add(fallbackLabel, c);
 
     JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-    myEnableLigaturesCheckbox.setBorder(null);
-    panel.add(myEnableLigaturesCheckbox);
-    JLabel warningIcon = new JLabel(AllIcons.General.BalloonWarning);
-    IdeTooltipManager.getInstance().setCustomTooltip(
-      warningIcon,
-      new TooltipWithClickableLinks.ForBrowser(warningIcon,
-                                               ApplicationBundle.message("ligatures.jre.warning",
-                                                                         ApplicationNamesInfo.getInstance().getFullProductName())));
-    warningIcon.setBorder(JBUI.Borders.emptyLeft(5));
-    warningIcon.setVisible(!areLigaturesAllowed());
-    panel.add(warningIcon);
+    //myEnableLigaturesCheckbox.setBorder(null);
+    //panel.add(myEnableLigaturesCheckbox);
+
+    JPanel advancedTypography = createFontFeaturesPanel();
+    panel.add(advancedTypography);
+    advancedTypography.setEnabled(false);
+
     c.gridx = 0;
     c.gridy = 4;
     c.gridwidth = 2;
@@ -216,13 +253,7 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
         }
       }
     });
-    myEnableLigaturesCheckbox.addActionListener(e -> {
-      FontPreferences preferences = getFontPreferences();
-      if (preferences instanceof ModifiableFontPreferences) {
-        ((ModifiableFontPreferences)preferences).setUseLigatures(myEnableLigaturesCheckbox.isSelected());
-        updateDescription(true);
-      }
-    });
+
     return fontPanel;
   }
 
