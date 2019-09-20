@@ -85,6 +85,28 @@ public class FontInfo {
     }
   }
 
+  public static String patchName(String name, Map<String, Float> variations) {
+    boolean once = true;
+    int i = 0;
+    StringBuilder newName = new StringBuilder();
+    newName.append(name);
+    for (Map.Entry<String, Float> entry : variations.entrySet()) {
+      i++;
+      if (once) {
+        once = false;
+        newName.append(";");
+      }
+
+      newName.append(entry.getKey());
+      newName.append("=");
+      newName.append(entry.getValue());
+      if (i != variations.size()) {
+        newName.append(",");
+      }
+    }
+    return newName.toString();
+  }
+
   /**
    * To get valid font metrics from this {@link FontInfo} instance, pass valid {@link FontRenderContext} here as a parameter.
    */
@@ -92,7 +114,7 @@ public class FontInfo {
                   FontRenderContext fontRenderContext) {
     mySize = size;
     myStyle = style;
-    Font font = new Font(familyName, style, size);
+    Font font = new Font(patchName(familyName, variations), style, size);
     
     if (featureClass != null && variationClass != null) {
       for (Map.Entry<String, Integer> entry: features.entrySet()) {

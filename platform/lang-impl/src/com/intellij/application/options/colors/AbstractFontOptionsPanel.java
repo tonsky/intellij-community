@@ -99,7 +99,7 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
       fontVariationsPanel.add(variationsLabel);
       fontVariationsPanel.add(fontVariations);
       // todo: api for font variants in glyph layout
-      // advancedFeatures.add(fontVariationsPanel);
+       advancedFeatures.add(fontVariationsPanel);
 
 
       return advancedFeatures;
